@@ -53,11 +53,9 @@ type_of_argument_select = driver.find_element(By.CLASS_NAME, "js-select")
 # Создаем объект Select для работы с выпадающим списком
 select = Select(type_of_argument_select)
 
-# Выбираем опцию по видимому тексту
-select.select_by_visible_text("НЕ ЗАДАН")
 
 find_button = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.ID, "b-form-submit"))
+    EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div/div[1]/dl/dd/div[9]/div/div/button"))
 )
 find_button.click()
 
