@@ -47,3 +47,9 @@
 #    i += 1
 
 #print(results)
+
+import sys
+
+
+# Получаем список директорий, где Python ищет модули
+print(sys.path)

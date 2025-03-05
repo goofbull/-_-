@@ -104,25 +104,20 @@ def extract_text_from_docx(file_path):
 
 directory = "./docx_cases/"
 
-
-def CleanText(file_number: int):
-    # Путь к Word файлу
+def GetCleanText(file_number: int):
     filename = "case_" + str(file_number) + ".docx"
     file_path = os.path.join(directory, filename)
 
-    # Извлекаем текст
     text = extract_text_from_docx(file_path)
-
-    # print(text)
-
-    #tokens = [token.text for token in tokenize(text)]
 
     text = text.replace('\n', '')
     text = text.replace('Р Е Ш Е Н И Е', '')
     text = text.replace('Р Е Ш И Л', '')
-    print("Извлеченный текст:")
+    print("Извлеченный очищенный текст:")
     print(text)
-    # Разделяем текст на слова
+    return text
+
+def CleanText(text: str):
     words = text.split()
 
     print("\nРАЗДЕЛЕННЫЙ ТЕКСТ")
@@ -230,13 +225,16 @@ def CleanText(file_number: int):
         "org_entities": org
     }
 
-
-
-case2_result = CleanText(2)
-case3_result = CleanText(1)
+text_case2 = GetCleanText(2)
+print("ТЕКСТ:", text_case2)
+text_case3 = GetCleanText(1)
+case2_result = CleanText(text_case2)
+case3_result = CleanText(text_case3)
 
 
 # Сравнение слов
 same_words = list(set(case2_result['nouns']).intersection(set(case3_result['nouns'])))
 print("\nОДИНАКОВЫЕ СЛОВА:")
 print(same_words)
+
+

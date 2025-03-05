@@ -19,7 +19,7 @@ for i in range (1, number_of_docs + 1):
     output_filename = "case_" + active_file_number + ".docx"
     output_path = os.path.join(output_directory, output_filename)
 
-    # Открытие PDF-файла
+
     with open(file_path, "rb") as file:
         
         # Создание объекта PdfReader
