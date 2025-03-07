@@ -71,6 +71,8 @@ result = re.findall(r'\b[А-Яа-яЁё]+\b\s[А-Я]\.[А-Я]\.', text)
 print(result)
 
 
+
+
 # p = 'Романовой' 
 # driver.get("https://textovod.com/morph")
 # search_box = WebDriverWait(driver, 10).until(
@@ -110,6 +112,8 @@ print(result)
 #     if "им" in i and sp[4] in i:
 #         infinitiv = i.split()
 #         print(infinitiv[0])
+#         break
+#
 
 article_declensions = ["статья", "статьи", "статей", "статье", 
       "статьям", "статьями", "статью", "статьёй", 
@@ -125,10 +129,11 @@ defendant_declensions = ["ответчик", "ответчики", "ответч
                          "ответчику", "ответчикам", "ответчиком", "ответчиками",
                          "ответчике", "ответчиках",]
 
-instance = []
+instance_declensions = ["инстанция", "инстанции", "инсанций", "инстанциям", "инстанцию",
+                    "инстанцией", "инстанциями", "инстанциях"]
 
 text = text.replace('\n', '')
-# Инициализация Natasha для лемматизации
+###################
 
 text_splitted = text.split()
 text_splitted_clean = []
@@ -146,8 +151,33 @@ for i in text_splitted_clean:
         name = text_splitted_clean[index+2]
         p.append(surname + ' '+ name)
         break
-    
+##############
+for i in text_splitted_clean:
+    if i in defendant_declensions:
+        index = text_splitted_clean.index(i)
+        surname = text_splitted_clean[index+1]
+        name = text_splitted_clean[index+2]
+        p.append(surname + ' '+ name)
+        break
+###############
+# Лемматизация текста с помощью Natasha
+def lemmatize_text(text):
+    doc = Doc(text)
+    doc.segment(segmenter)
+    doc.tag_morph(morph_tagger)
+    for token in doc.tokens:
+        token.lemmatize(morph_vocab)
+    return " ".join(token.lemma for token in doc.tokens)
 
+instances = {"первая": 1, "апелляционная": 2, "первая кассационная": 3, "вторая кассационная": 4, "надзорная": 5}
+pattern = rf"\b({'|'.join(instance_declensions.keys())})\s+({'|'.join(instance_declensions)})\b"
+match = re.search(pattern, text, re.IGNORECASE)
+if match:
+    instance_key = match.group(1).lower()
+    print(instance_declensions.get(instance_key, "Неизвестная инстанция"))
+else:
+    print("Ничего не найдено")
+##################
 segmenter = Segmenter()
 morph_vocab = MorphVocab()
 emb = NewsEmbedding()
@@ -162,14 +192,6 @@ abbreviations = {
     "водный": "вк", "воздушный": "вшк", "кодекс торговый мореплавание": "ктм", "кодекс внутренний водный транспорт": "кввт" 
 }
 
-# Лемматизация текста с помощью Natasha
-def lemmatize_text(text):
-    doc = Doc(text)
-    doc.segment(segmenter)
-    doc.tag_morph(morph_tagger)
-    for token in doc.tokens:
-        token.lemmatize(morph_vocab)
-    return " ".join(token.lemma for token in doc.tokens)
 
 # Регулярное выражение для поиска статьи и номеров
 pattern = re.compile(r"\bстатья\s+((?:\d+[,-]?\s*)+)((?:[А-Яа-я]+(?:\s+[А-Яа-я]+)*)?) кодекс российский федерация", re.IGNORECASE)
@@ -200,3 +222,4 @@ result = extract_articles(text)
 print(result)  # {'АПК': [110, 167, 168, 169, 170, 171, 176, 318]}
 
 print(p)
+
