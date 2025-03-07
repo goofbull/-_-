@@ -1,9 +1,10 @@
-from PyPDF2 import PdfReader
+
 from docx import Document
 import os
+import fitz
 
 # Файлов 100
-number_of_docs = 100
+number_of_docs = 1
 directory = "./pdf_cases/"
 output_directory = "./docx_cases/"
 
@@ -22,23 +23,12 @@ for i in range (1, number_of_docs + 1):
 
     with open(file_path, "rb") as file:
         
-        # Создание объекта PdfReader
-        pdf_reader = PdfReader(file)
+        doc = fitz.open(directory+filename)
+        text = "\n".join([page.get_text() for page in doc])
 
         # Открытие документа Word для записи
         with open(output_path, "wb") as output_file:
-
-            # Перебор каждой страницы PDF-файла
-            for page_num in range(len(pdf_reader.pages)):
-                
-                # Получение текущей страницы
-                page = pdf_reader.pages[page_num]
-
-                # Извлечение текста со страницы
-                text = page.extract_text()
-                
-                # Добавление абзаца в Word, содержащего текст
-                document.add_paragraph(text)
+            document.add_paragraph(text)
 
     # Сохранение документа Word
     document.save(output_path)

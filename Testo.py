@@ -78,6 +78,7 @@ from natasha import (
     Doc
 )
 import os
+import fitz
 
 
 os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
@@ -95,6 +96,7 @@ names_extractor = NamesExtractor(morph_vocab)
 # Инициализация морфологического анализатора
 morph = pymorphy3.MorphAnalyzer()
 
+
 def extract_text_from_docx(file_path):
     document = Document(file_path)
     text = ""
@@ -104,11 +106,11 @@ def extract_text_from_docx(file_path):
 
 directory = "./docx_cases/"
 
-def GetCleanText(file_number: int):
-    filename = "case_" + str(file_number) + ".docx"
-    file_path = os.path.join(directory, filename)
+def GetCleanText(text: str):
+    #filename = "case_" + str(file_number) + ".docx"
+    #file_path = os.path.join(directory, filename)
 
-    text = extract_text_from_docx(file_path)
+    #text = extract_text_from_docx(file_path)
 
     text = text.replace('\n', '')
     text = text.replace('Р Е Ш Е Н И Е', '')
@@ -116,6 +118,11 @@ def GetCleanText(file_number: int):
     print("Извлеченный очищенный текст:")
     print(text)
     return text
+
+directory = "./pdf_cases/"
+filename = "case_1.pdf"
+doc = fitz.open(directory+filename)
+text = "\n".join([page.get_text() for page in doc])
 
 def CleanText(text: str):
     words = text.split()
@@ -225,16 +232,18 @@ def CleanText(text: str):
         "org_entities": org
     }
 
-text_case2 = GetCleanText(2)
-print("ТЕКСТ:", text_case2)
-text_case3 = GetCleanText(1)
-case2_result = CleanText(text_case2)
-case3_result = CleanText(text_case3)
+#text_case1 = GetCleanText(1)
+#print("ТЕКСТ:", text_case2)
+#text_case3 = GetCleanText(1)
+#case1_result = CleanText(text_case1)
+text_case1 = GetCleanText(text)
+CleanText(text_case1)
+#case3_result = CleanText(text_case3)
 
 
 # Сравнение слов
-same_words = list(set(case2_result['nouns']).intersection(set(case3_result['nouns'])))
-print("\nОДИНАКОВЫЕ СЛОВА:")
-print(same_words)
+#same_words = list(set(case2_result['nouns']).intersection(set(case3_result['nouns'])))
+#print("\nОДИНАКОВЫЕ СЛОВА:")
+#print(same_words)
 
 
