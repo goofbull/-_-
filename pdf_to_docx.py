@@ -4,14 +4,14 @@ import os
 import fitz
 
 # Файлов 100
-number_of_docs = 1
+number_of_docs = 100
 directory = "./pdf_cases/"
 output_directory = "./docx_cases/"
 
 for i in range (1, number_of_docs + 1):
 
     active_file_number = str(i)
-    # Создание нового документа Word
+
     document = Document()
 
     filename = "case_" + active_file_number + ".pdf"

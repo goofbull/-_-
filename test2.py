@@ -17,7 +17,18 @@ from webdriver_manager.firefox import GeckoDriverManager
 import time
 
 from natasha import (
-    Segmenter, MorphVocab, NewsEmbedding, NewsMorphTagger, Doc
+        Segmenter,
+    MorphVocab,
+    
+    NewsEmbedding,
+    NewsMorphTagger,
+    NewsSyntaxParser,
+    NewsNERTagger,
+    
+    PER,
+    NamesExtractor,
+
+    Doc
 )
 #service = Service("E:\geckodriver\geckodriver.exe")
 #driver = webdriver.Firefox(service=service)
@@ -54,8 +65,8 @@ formatted_date = f"{day}/{month_num}/{year}"
 
 print(formatted_date)
 
-result = re.findall(r'\b[А-Яа-яЁё]+\b\s[А-Я]\.[А-Я]\.', text)
-print(result)
+#result = re.findall(r'\b[А-Яа-яЁё]+\b\s[А-Я]\.[А-Я]\.', text)
+#print(result)
 
 
 directory = "./pdf_cases/"
@@ -64,11 +75,11 @@ doc = fitz.open(directory+filename)
 text = "\n".join([page.get_text() for page in doc])
 
 clean_text = ' '.join(text.split())
-print(clean_text)
+#print(clean_text)
 
-print(text)
-result = re.findall(r'\b[А-Яа-яЁё]+\b\s[А-Я]\.[А-Я]\.', text)
-print(result)
+#print(text)
+#result = re.findall(r'\b[А-Яа-яЁё]+\b\s[А-Я]\.[А-Я]\.', text)
+#print(result)
 
 
 # p = 'Романовой' 
@@ -125,7 +136,6 @@ defendant_declensions = ["ответчик", "ответчики", "ответч
                          "ответчику", "ответчикам", "ответчиком", "ответчиками",
                          "ответчике", "ответчиках",]
 
-instance = []
 
 text = text.replace('\n', '')
 # Инициализация Natasha для лемматизации
@@ -147,11 +157,23 @@ for i in text_splitted_clean:
         p.append(surname + ' '+ name)
         break
     
+for i in text_splitted_clean:
+    if i in defendant_declensions:
+        index = text_splitted_clean.index(i)
+        surname = text_splitted_clean[index+1]
+        name = text_splitted_clean[index+2]
+        p.append(surname + ' '+ name)
+        break
 
 segmenter = Segmenter()
 morph_vocab = MorphVocab()
+
 emb = NewsEmbedding()
 morph_tagger = NewsMorphTagger(emb)
+syntax_parser = NewsSyntaxParser(emb)
+ner_tagger = NewsNERTagger(emb)
+
+names_extractor = NamesExtractor(morph_vocab)
 
 # Словарь сокращений кодексов
 abbreviations = {
@@ -200,3 +222,15 @@ result = extract_articles(text)
 print(result)  # {'АПК': [110, 167, 168, 169, 170, 171, 176, 318]}
 
 print(p)
+
+# loc = []
+# doc = Doc(text)
+# doc.segment(segmenter)
+# doc.tag_ner(ner_tagger)
+# locs = [span.text for span in doc.spans if span.type == "LOC"]
+# print(locs)
+#print(text_splitted)
+for word in text_splitted:
+    if word == 'г.':
+        ind = text_splitted.index(word)
+print(text_splitted[ind+1])        
