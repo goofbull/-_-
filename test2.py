@@ -121,6 +121,8 @@ clean_text = ' '.join(text.split())
 #     if "им" in i and sp[4] in i:
 #         infinitiv = i.split()
 #         print(infinitiv[0])
+#         break
+#
 
 article_declensions = ["статья", "статьи", "статей", "статье", 
       "статьям", "статьями", "статью", "статьёй", 
@@ -138,7 +140,7 @@ defendant_declensions = ["ответчик", "ответчики", "ответч
 
 
 text = text.replace('\n', '')
-# Инициализация Natasha для лемматизации
+###################
 
 text_splitted = text.split()
 text_splitted_clean = []
@@ -184,14 +186,6 @@ abbreviations = {
     "водный": "вк", "воздушный": "вшк", "кодекс торговый мореплавание": "ктм", "кодекс внутренний водный транспорт": "кввт" 
 }
 
-# Лемматизация текста с помощью Natasha
-def lemmatize_text(text):
-    doc = Doc(text)
-    doc.segment(segmenter)
-    doc.tag_morph(morph_tagger)
-    for token in doc.tokens:
-        token.lemmatize(morph_vocab)
-    return " ".join(token.lemma for token in doc.tokens)
 
 # Регулярное выражение для поиска статьи и номеров
 pattern = re.compile(r"\bстатья\s+((?:\d+[,-]?\s*)+)((?:[А-Яа-я]+(?:\s+[А-Яа-я]+)*)?) кодекс российский федерация", re.IGNORECASE)
