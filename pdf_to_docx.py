@@ -9,7 +9,7 @@ directory = "./pdf_cases/"
 output_directory = "./docx_cases/"
 
 for i in range (1, number_of_docs + 1):
-
+    
     active_file_number = str(i)
 
     document = Document()
@@ -26,10 +26,7 @@ for i in range (1, number_of_docs + 1):
         doc = fitz.open(directory+filename)
         text = "\n".join([page.get_text() for page in doc])
 
-        # Открытие документа Word для записи
         with open(output_path, "wb") as output_file:
             document.add_paragraph(text)
-
-    # Сохранение документа Word
     document.save(output_path)
     print("Файл " + filename + " был отформатирован")

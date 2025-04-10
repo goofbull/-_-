@@ -33,19 +33,20 @@ from natasha import (
 #service = Service("E:\geckodriver\geckodriver.exe")
 #driver = webdriver.Firefox(service=service)
 
+
 myfile = open("text.txt", "rt")
 text = myfile.read()
 myfile.close()
 
-result = re.search(r'А\d{2}-\d+ /\d{4}', text)
+result = re.search(r'А\d{2,}-\d+ /\d+', text)
 print(result.group())
 
 result = re.search(r'\d{2}\s+(декабря|января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября)\s+\d{4}\s+года', text)
-print(result.group())
+#print(result.group())
 
 date_string = result.group()
 
-# Словарь для перевода русского месяца в числовое значение
+
 months = {
     "января": "01", "февраля": "02", "марта": "03", "апреля": "04", 
     "мая": "05", "июня": "06", "июля": "07", "августа": "08", 
@@ -56,8 +57,6 @@ date_string = date_string.replace("года", "")
 
 # Разбиваем строку на части
 day, month, year = date_string.split()
-
-# Переводим месяц в числовой формат
 month_num = months[month]
 
 # Собираем строку в нужном формате
@@ -70,7 +69,7 @@ print(formatted_date)
 
 
 directory = "./pdf_cases/"
-filename = "case_1.pdf"
+filename = "case_10.pdf"
 doc = fitz.open(directory+filename)
 text = "\n".join([page.get_text() for page in doc])
 
@@ -176,7 +175,13 @@ syntax_parser = NewsSyntaxParser(emb)
 ner_tagger = NewsNERTagger(emb)
 
 names_extractor = NamesExtractor(morph_vocab)
-
+def lemmatize_text(text):
+    doc = Doc(text)
+    doc.segment(segmenter)
+    doc.tag_morph(morph_tagger)
+    for token in doc.tokens:
+        token.lemmatize(morph_vocab)
+    return " ".join(token.lemma for token in doc.tokens)
 # Словарь сокращений кодексов
 abbreviations = {
     "земельный": "зк", "гражданский": "гк", "трудовой": "тк", "налоговый": "нк", "кодекс об административный правонарушения": "коап", 
@@ -191,8 +196,8 @@ abbreviations = {
 pattern = re.compile(r"\bстатья\s+((?:\d+[,-]?\s*)+)((?:[А-Яа-я]+(?:\s+[А-Яа-я]+)*)?) кодекс российский федерация", re.IGNORECASE)
 
 def extract_articles(text):
-    article_dict = defaultdict(set)  # Используем множество для удаления дубликатов
-    text = lemmatize_text(text)  # Применяем лемматизацию
+    article_dict = defaultdict(set)
+    text = lemmatize_text(text)
     
     matches = pattern.findall(text)
     for numbers, code_type in matches:
@@ -204,16 +209,16 @@ def extract_articles(text):
                 article_numbers.update(range(start, end + 1))
             else:
                 article_numbers.add(int(part.strip()))
-        # Заменяем полное название кодекса на сокращение
+
         if code_type in abbreviations:
             code_type = abbreviations[code_type]
         article_dict[code_type].update(article_numbers)
     
-    return {key: sorted(value) for key, value in article_dict.items()}  # Преобразуем множества в отсортированные списки
+    return {key: sorted(value) for key, value in article_dict.items()}
 
 
 result = extract_articles(text)
-print(result)  # {'АПК': [110, 167, 168, 169, 170, 171, 176, 318]}
+print(result)
 
 print(p)
 
@@ -228,3 +233,47 @@ for word in text_splitted:
     if word == 'г.':
         ind = text_splitted.index(word)
 print(text_splitted[ind+1])        
+
+# Поиск даты в разных форматах
+result = re.search(r'\d{2}\s+(декабря|января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября)\s+\d{4}\s+года', text)
+result2 = re.search(r'«(\d{2})»\s+(декабря|января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября)\s+(\d{4})г\.', text)
+result3 = re.search(r'(\d{2})\.(\d{2})\.(\d{4})', text)
+result4 = re.search(r'(\d{2})\.(\d{2})\.(\d{4})\s+года', text)
+
+if result2:
+    # Обрабатываем формат «день месяц год» (с кавычками)
+    day = result2.group(1)        # Читаем день
+    month = result2.group(2)      # Читаем месяц
+    year = result2.group(3)       # Читаем год
+
+    # Преобразуем месяц в номер
+    month_num = months[month]
+
+    # Форматируем дату
+    formatted_date = f"{day}/{month_num}/{year}"
+
+elif result3:
+    # Если дата не в формате «день месяц год», то пробуем найти дату в формате "дд.мм.гггг"
+    formatted_date = re.sub(r'(\d{2})\.(\d{2})\.(\d{4})', r'\1/\2/\3', text)
+
+elif result:
+    # Если дата в нужном формате, то убираем "года" и формируем строку
+    date_string = result.group()
+    date_string = date_string.replace("года", "")
+
+    day, month, year = date_string.split()
+    month_num = months[month]
+
+    formatted_date = f"{day}/{month_num}/{year}"
+
+elif result4:
+    # Обрабатываем формат "дд.мм.гггг года"
+    day = result4.group(1)
+    month = result4.group(2)
+    year = result4.group(3)
+
+    # Форматируем дату
+    formatted_date = f"{day}/{month}/{year}"
+
+# Выводим отформатированную дату
+print("Дата публикации:", formatted_date)

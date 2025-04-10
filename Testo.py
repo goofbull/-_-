@@ -54,15 +54,9 @@
 #     if i == "банктрот":
 #         print("yes")
 
-# print(key_words)
-from pypdf import PdfReader
-import nltk
-import razdel
-from razdel import tokenize
+
 import re
-from docx import Document
 import pymorphy3
-from sklearn.feature_extraction.text import TfidfVectorizer
 from natasha import (
     Segmenter,
     MorphVocab,
@@ -97,41 +91,20 @@ names_extractor = NamesExtractor(morph_vocab)
 morph = pymorphy3.MorphAnalyzer()
 
 
-def extract_text_from_docx(file_path):
-    document = Document(file_path)
-    text = ""
-    for paragraph in document.paragraphs:
-        text += paragraph.text + "\n"  # Сохраняем переносы строк для разделения абзацев
-    return text.strip()
 
-directory = "./docx_cases/"
+def remove_strings_with_english(text_list):
+    # Регулярное выражение для поиска английских букв
+    return [text for text in text_list if not re.search(r'[a-zA-Z]', text)]
 
-def GetCleanText(text: str):
-    #filename = "case_" + str(file_number) + ".docx"
-    #file_path = os.path.join(directory, filename)
+def remove_non_russian_alpha_lines(lines):
+    return [line for line in lines if re.match("^[А-яёЁ]+$", line)]
 
-    #text = extract_text_from_docx(file_path)
+def remove_lines_with_multiple_spaces(lines):
+    return [line for line in lines if not re.search(r"\s{2,}", line)]
 
-    text = text.replace('\n', '')
-    text = text.replace('Р Е Ш Е Н И Е', '')
-    text = text.replace('Р Е Ш И Л', '')
-    print("Извлеченный очищенный текст:")
-    print(text)
-    return text
 
-directory = "./pdf_cases/"
-filename = "case_1.pdf"
-doc = fitz.open(directory+filename)
-text = "\n".join([page.get_text() for page in doc])
-
-def CleanText(text: str):
-    words = text.split()
-
-    print("\nРАЗДЕЛЕННЫЙ ТЕКСТ")
-    print(words)
-
-    # Пример списка стоп-слов
-    stop_words_set = {"я", "ты", "он", "она", "оно", "мы", "вы", "они", "не", "нет", "того" "это", "тот", "та", "те", "который", "чей", "кто", "что", 
+# Пример списка стоп-слов
+stop_words_set = {"я", "ты", "он", "она", "оно", "мы", "вы", "они", "не", "нет", "того" "это", "тот", "та", "те", "который", "чей", "кто", "что", 
                       "да", "а", "но", "и", "или", "да", "также", "же", "ли", "бы", "для", "от", "из", "с", "на", 
                       "в", "по", "к", "у", "о", "об", "при", "для", "за", "перед", "после", "до", "через", "между", "над", 
                       "под", "вокруг", "из-за", "около", "через", "вон", "про", "между", "если", "когда", "пока", "хотя", 
@@ -142,12 +115,21 @@ def CleanText(text: str):
                       "возможно", "следует", "конечно", "вроде", "чем", "что-то", "тот", "этот", "такой", "никакой", "другой", "так как", 
                       "а вот", "пусть", "либо", "просто", "типо", "короче", "хотя бы", "и так далее", "далее", "есть", "потому", "то", "поскольку", "б"}
 
+
+def CleanText(directory: str, filename: str):
+
+    doc = fitz.open(directory+filename)
+    text = "\n".join([page.get_text() for page in doc])
+
+    text = text.replace('\n', '')
+    text = text.replace('Р Е Ш Е Н И Е', '')
+    text = text.replace('Р Е Ш И Л', '')
+    words = text.split()
+
     # Лемматизация и удаление стоп-слов
     lemmatized_and_no_stop_words = [morph.parse(word)[0].normal_form for word in words if morph.parse(word)[0].normal_form not in stop_words_set]
 
-    # Список для частей речи
-    parts_of_speech = []
-    nouns_list = []
+    nouns = []
     loc = []
     per = []
     org = []
@@ -155,15 +137,14 @@ def CleanText(text: str):
     # Создаем документ для NER из всего текста
     doc = Doc(text)
     doc.segment(segmenter)
-    print("Токенизация текста для NER завершена.")
+    #print("Токенизация текста для NER завершена.")
     
     # Добавляем NER-теги
     doc.tag_ner(ner_tagger)
-    print("NER теги добавлены.")
+    #print("NER теги добавлены.")
 
     # Проверяем, какие сущности найдены
     for span in doc.spans:
-        print(f"Сущность: {span.text}, Тип: {span.type}")
         if span.type == "LOC":
             loc.append(span.text)  # Добавляем все сущности LOC
         elif span.type == "PER":
@@ -180,70 +161,35 @@ def CleanText(text: str):
             # Не добавляем части речи: предлог, союз, частица, междометие
             if parsed_word.tag.POS != 'NPRO' and not any(word in entity_list for entity_list in [loc, per, org]):
                 # Исключаем местоимения и сущности LOC, PER, ORG
-                nouns_list.append(word)
+                nouns.append(word) 
+
+    nouns = [str for str in nouns if len(str) > 1]
+
+    nouns = remove_strings_with_english(nouns)
+    nouns = remove_non_russian_alpha_lines(nouns)
+    per = remove_lines_with_multiple_spaces(per)
 
     # Отображаем результаты
-    print("\nСущности LOC:")
-    print(loc)
+    #print("\nСущности LOC:")
+    #print(loc)
 
-    print("\nСущности PER:")
-    print(per)
+    #print("\nСущности PER:")
+    #print(per)
 
-    print("\nСущности ORG:")
-    print(org)
+    #print("\nСущности ORG:")
+    #print(org)
 
-    print("\nNouns List:")
-    print(nouns_list)
+    #print("\nNouns List:")
+    #print(nouns)
 
-    
-    # Итерация через копию списка, чтобы избежать проблем с удалением элементов
-    for word in nouns_list[:]:  # Создаем копию списка для безопасной итерации
-        parsed_word = morph.parse(word)[0]
-        #print(parsed_word.tag.POS)
+    a = []
+    a.extend(loc)
+    a.extend(per)
+    a.extend(org)
+    a.extend(nouns)
 
-        # Если часть речи None, удаляем слово из списка
-        if parsed_word.tag.POS is None and word in nouns_list:
-            nouns_list.remove(word)
-        
-        # Если слово - это целое число, удаляем его
-        if isinstance(word, int) and word in nouns_list:
-            nouns_list.remove(word)
-        
-        # Если слово содержит "http", удаляем его
-        if "http" in word and word in nouns_list:
-            nouns_list.remove(word)
-        
-        # Если слово - "-", удаляем его
-        if word == "-" and word in nouns_list:
-            try:
-                nouns_list.remove(word)
-            except ValueError:
-                pass  # Игнорируем ошибку, если слово не найдено в списке
+    #print("\nОЧИЩЕННЫЙ ТЕКСТ: ")
+    clean_text = " ".join(a)
+    #print(clean_text)
 
-
-    nouns_list_clear = [re.sub(r'\d+', '', i) for i in nouns_list] 
-    #print("\nТокены:")
-    #print(tokens)
-    # Возвращаем результаты
-    return {
-        "nouns": nouns_list_clear,
-        "loc_entities": loc,
-        "per_entities": per,
-        "org_entities": org
-    }
-
-#text_case1 = GetCleanText(1)
-#print("ТЕКСТ:", text_case2)
-#text_case3 = GetCleanText(1)
-#case1_result = CleanText(text_case1)
-text_case1 = GetCleanText(text)
-CleanText(text_case1)
-#case3_result = CleanText(text_case3)
-
-
-# Сравнение слов
-#same_words = list(set(case2_result['nouns']).intersection(set(case3_result['nouns'])))
-#print("\nОДИНАКОВЫЕ СЛОВА:")
-#print(same_words)
-
-
+    return clean_text, per[-1]
