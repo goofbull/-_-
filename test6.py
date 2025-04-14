@@ -364,6 +364,8 @@ def get_data_from_file(active_file_number: str):
             else:
                 list_with_data.append(0)
     #print("\n")
+    prediction = 0
+    list_with_data.append(prediction)
     return list_with_data
 
 dict = {}

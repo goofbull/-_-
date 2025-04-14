@@ -16,7 +16,7 @@ def create_empty_excel(columns: list, filename: str, sheet_name: str = 'arbitr_f
 
     return filepath, df
 
-columns = ['index', 'text', 'clean_text', 'judge', 'case_number', 'publication_date', 'articles', 'number_or_words_in_text', 'claimant', 'defendant', 'location', 'decision']
+columns = ['index', 'text', 'clean_text', 'judge', 'case_number', 'publication_date', 'articles', 'number_of_words_in_text', 'claimant', 'defendant', 'location', 'decision', 'prediction']
 
 def create_tabel():
     filepath, df = create_empty_excel(columns=columns,
