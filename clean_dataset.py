@@ -1,66 +1,76 @@
 import csv
 import pandas as pd
-import spacy
-from sklearn.model_selection import train_test_split
+#from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-import category_encoders as ce
-from sklearn.tree import DecisionTreeClassifier
+#import category_encoders as ce
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.metrics import confusion_matrix
+#from sklearn.metrics import confusion_matrix
 from sklearn.feature_extraction.text import TfidfVectorizer
-import srsly.ujson
+from sklearn.cluster import KMeans
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+df = pd.read_csv('./csv/prepared_data.csv')
+
+# df_copy = df.copy()
+#all_text = []
+# low_reg_text = []
 
 
-nlp = spacy.load("ru_core_news_sm")
+# df.to_csv('./csv/arbitr_dataset.csv', index=False, encoding='utf-8')
 
-df = pd.read_csv('./csv/arbitr_dataset.csv')
+texts = df['data']#.iloc[1:101].str.lower() + '.'
 
-#print(df.isnull().sum())
+labels = df['decision'].tolist()  # Колонка с метками решений
 
-def read_cell(x, y):
-    with open('./csv/arbitr_dataset.csv', 'r', encoding='utf-8') as f:
-        reader = csv.reader(f)
-        y_count = 0
-        for n in reader:
-            if y_count == y:
-                cell = n[x]
-                return cell
-            y_count += 1
+# Векторизация текста с помощью TfidfVectorizer
+vectorizer = TfidfVectorizer()
+X_tfidf = vectorizer.fit_transform(texts)
 
+# Применяем кластеризацию (если нужно для извлечения признаков)
 
-low_reg_text = []
-for i in range(1, 2 + 1):
-        text = read_cell(3, i)
-        low_reg_text = nlp(text.lower())
-        print("СТРОКА ", i, " ОБРАБОТАНА")
+kmeans = KMeans(n_clusters=10, n_init='auto', random_state=42)
 
+cluster_labels = kmeans.fit_predict(X_tfidf)
 
-documents = low_reg_text
+# Объединяем TF-IDF и кластеры
+X_with_clusters = pd.DataFrame(X_tfidf.toarray())
+X_with_clusters['cluster'] = cluster_labels
 
-# clean_text, judge, articles, location
-X = df.drop(['Unnamed: 0', 'index', 'text', 'case_number', 'number_of_words_in_text', 'publication_date', 'claimant', 'defendant', 'decision'], axis=1)
-y = df['prediction']
+# Приводим все столбцы к строковому типу
+X_with_clusters.columns = X_with_clusters.columns.astype(str)
 
+# Обучаем классификатор (Random Forest)
+clf = RandomForestClassifier(n_estimators=100, bootstrap = True, class_weight = 'balanced', max_features = 4,
+                            max_depth=100, random_state=42)
+clf.fit(X_with_clusters, labels)
 
+# # Новый текст для предсказания
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=44)
-
-print(X_train.shape, X_test.shape)
-print(X_train.dtypes)
-
-encoder = ce.OrdinalEncoder(cols=['clean_text', 'judge', 'doarticlesors', 'location'])
+df2 = pd.read_csv('./csv/prepared_data_for_testing.csv')
+new_texts = df2['data']
 
 
-X_train = encoder.fit_transform(X_train)
+X_new_tfidf = vectorizer.transform(new_texts)
+new_cluster = kmeans.predict(X_new_tfidf)
 
-X_test = encoder.transform(X_test)
+# Добавляем кластер к вектору
+X_new_df = pd.DataFrame(X_new_tfidf.toarray())
+X_new_df['cluster'] = new_cluster
 
+# Приводим столбцы к строковому типу
+X_new_df.columns = X_new_df.columns.astype(str)
 
+# Предсказание
+prediction = clf.predict(X_new_df)
+#print("Предсказание:", prediction[0])
 
+# Оценка модели на обучающих данных
+#predictions = clf.predict(X_with_clusters)
+# print(classification_report(labels, predictions))
+# print(f'Accuracy: {accuracy_score(df['decision'], predictions)}')
+accuracy = accuracy_score(df2['decision'], prediction)
 
-
-model = RandomForestClassifier(n_estimators=100, criterion='entropy', random_state=0)
-model.fit(X_train, y_train)
-y_pred = model.predict(X_test)
-
-print(y_pred)
+print(f"Accuracy: {accuracy:.2f}")
+print("Precision Score : ", precision_score(df2['decision'], prediction, average='micro'))
+print("Recall Score : ", recall_score(df2['decision'], prediction, average='micro'))
+print("F1 Score : ", f1_score(df2['decision'], prediction, average='micro'))

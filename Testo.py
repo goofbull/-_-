@@ -1,13 +1,13 @@
 # from ruslingua import RusLingua
 # from untitled import lemmatized_and_no_stop_words
 # from untitled import extract_text_from_docx
-# import logging
-# import time
+import logging
+import time
 
 
-# start_time = time.time()
-# # Настройка логирования
-# logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO, filename="py_log.log",filemode="w")
 
 # ruslingua = RusLingua()
 # key_words = []
@@ -16,14 +16,12 @@
 # file_path = "output_terminology.docx"
 
 
-# logging.info("Загрузка файла...")
+# 
 # # Извлекаем текст
 # terminology_list = extract_text_from_docx(file_path)
 # logging.debug(f"Терминология: {terminology_list}")
 
-# end_time = time.time()
-# execution_time = end_time - start_time
-# print(f"Время выполнения операции: {execution_time:.4f} секунд")
+
 
 # for word in lemmatized_and_no_stop_words:
 #     start_time = time.time()
@@ -117,7 +115,8 @@ stop_words_set = {"я", "ты", "он", "она", "оно", "мы", "вы", "о�
 
 
 def CleanText(directory: str, filename: str):
-
+    start_time = time.time()
+    logging.info("Загрузка файла...")
     doc = fitz.open(directory+filename)
     text = "\n".join([page.get_text() for page in doc])
 
@@ -191,5 +190,9 @@ def CleanText(directory: str, filename: str):
     #print("\nОЧИЩЕННЫЙ ТЕКСТ: ")
     clean_text = " ".join(a)
     #print(clean_text)
-
+    end_time = time.time()
+    
+    execution_time = end_time - start_time
+    logging.info("Извлечение данных завершено")
+    logging.info(f"Время выполнения операции: {execution_time:.4f} секунд")
     return clean_text, per[-1]

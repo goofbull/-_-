@@ -17,8 +17,8 @@ from nltk import tokenize
 import re
 from collections import defaultdict
 from Testo import CleanText
+import pymorphy3
 
-directory = "./pdf_cases/"
 
 segmenter = Segmenter()
 morph_vocab = MorphVocab()
@@ -29,6 +29,7 @@ syntax_parser = NewsSyntaxParser(emb)
 ner_tagger = NewsNERTagger(emb)
 
 names_extractor = NamesExtractor(morph_vocab)
+morph = pymorphy3.MorphAnalyzer()
 
 # Словарь сокращений кодексов
 abbreviations = {
@@ -78,15 +79,21 @@ def extract_articles(text, article_pattern):
     
     return {key: sorted(value) for key, value in article_dict.items()}
 
-number_of_docs = 100
 
-def ustanovil(ust: str, text: str):
+def ustanovil(ust: str, text: str, resh: str):
 
     parts = text.split(ust, 1)
     if len(parts) != 2:
         return None, None
 
     before_ustanovil = parts[0].strip() # ограничим 1000 символов до "установил"
+
+    parts2 = text.split(resh, 1)
+    if len(parts2) != 2:
+        return None, None
+
+    before_reshil = parts2[0].strip()
+    reshil = before_reshil[-1000:]
 
     doc = Doc(before_ustanovil[-500:])
     doc.segment(segmenter)
@@ -103,22 +110,22 @@ def ustanovil(ust: str, text: str):
 
     if first_org and first_person:
         if first_org.start < first_person.start:
-            return first_org.text, first_person.text
+            return first_org.text, first_person.text, reshil
         else:
-            return first_person.text, first_org.text
+            return first_person.text, first_org.text, reshil
     elif len(orgs) >= 2:
-        return orgs[0].text, orgs[1].text
+        return orgs[0].text, orgs[1].text, reshil
     elif len(persons) >= 2:
-        return persons[0].text, persons[1].text
+        return persons[0].text, persons[1].text, reshil
     elif len(orgs) == 1 and len(persons) == 1:
-        return orgs[0].text, persons[0].text
+        return orgs[0].text, persons[0].text, reshil
     elif len(orgs) == 1:
-        return orgs[0].text, "Не найдено"
+        return orgs[0].text, "Не найдено", reshil
     elif len(persons) == 1:
-        return persons[0].text, "Не найдено"
+        return persons[0].text, "Не найдено", reshil
     else:
-        return "Не найдено", "Не найдено"
-    return None, None
+        return "Не найдено", "Не найдено", reshil
+    return None, None, None
 
 # Лишние слова для последующего удаления
 dl = ["край", "края", "область", "области", "район", "района", "России", "РФ", "Российской Федерации"]
@@ -146,7 +153,7 @@ months = {
     "сентября": "09", "октября": "10", "ноября": "11", "декабря": "12"
 }
 
-def get_data_from_file(active_file_number: str):
+def get_data_from_file(directory: str, active_file_number: str):
 
     list_with_data = []
 
@@ -258,31 +265,45 @@ def get_data_from_file(active_file_number: str):
     text = text.replace('у с т а н о в и л:', 'stop_point')
     text = text.replace('УСТАНОВИЛ:', 'stop_point')
     text = text.replace('У С Т А Н О В И Л:', 'stop_point')
+    text = text.replace('У с т а н о в и л:', 'stop_point')
+    text = text.replace('Установил:', 'stop_point')
+
+    text = text.replace('Р Е Ш И Л', 'start_point')
+    text = text.replace('р е ш и л', 'start_point')
+    text = text.replace('РЕШИЛ', 'start_point')
+    text = text.replace('решил', 'start_point')
+    text = text.replace('Решил', 'start_point')
+    text = text.replace('Р е ш и л', 'start_point')
+
 
     t3 = tokenize.word_tokenize(text)
 
     claimant = ''
     defendant = ''
+    reshil = ''
 
     claimant_found = False
 
     for t in t3:
             if t == "stop_point":
-                claimant, defendant = ustanovil(t, text)
+                claimant, defendant, reshil = ustanovil(t, text, 'start_point')
                 if defendant == 'Не найдено' and claimant != 'Не найдено':
                     defendant = 'Суд'
                     list_with_data.append(claimant)
                     list_with_data.append(defendant)
+                    list_with_data.append(reshil)
                     claimant_found = True
                     break
                 elif defendant == 'Не найдено' and claimant == 'Не найдено':
                     list_with_data.append(0)
                     list_with_data.append(0)
+                    list_with_data.append(reshil)
                     claimant_found = True
                     break
                 else:
                     list_with_data.append(claimant)
                     list_with_data.append(defendant)
+                    list_with_data.append(reshil)
                     claimant_found = True
                     break
 
@@ -290,6 +311,7 @@ def get_data_from_file(active_file_number: str):
     if not claimant_found:
         list_with_data.append(0)
         list_with_data.append(0)
+        list_with_data.append(reshil)
     loc = ''
     for i in t3:
         if i == "г.":
@@ -309,7 +331,7 @@ def get_data_from_file(active_file_number: str):
         list_with_data.append(0)
 
     decision = ''
-
+    doc = ''
     match = re.search(pattern, text)
     if match:
         filtered_loc = match.group(1)
@@ -318,7 +340,22 @@ def get_data_from_file(active_file_number: str):
         decision = "в пользу истца"
         list_with_data.append(decision)
     else:
-        if "Р Е Ш И Л" in text or "р е ш и л" in text or "решил" in text or "РЕШИЛ" in text:
+        if 'start_point' in text:
+            # for symb in range(0, len(text)):
+
+            #     if text[symb] == "Р" and text[symb + 8] == "Л":
+            #         doc = ust_to_reshil('stop_point', text, symb)
+            #         break
+            #     elif text[symb] == "р" and text[symb + 8] == "л":
+            #         doc = ust_to_reshil('stop_point', text, symb)
+            #         break
+            #     elif text[symb] == "р" and text[symb + 4] == "л":
+            #         doc = ust_to_reshil('stop_point', text, symb)
+            #         break
+            #     elif text[symb] == "Р" and text[symb + 4] == "Л":
+            #         doc = ust_to_reshil('stop_point', text, symb)
+            #         break
+
             if "частично" in text:
                 #print("ФАЙЛ ", active_file_number)
                 #print("частично")
@@ -363,19 +400,18 @@ def get_data_from_file(active_file_number: str):
                             list_with_data.append(decision)
             else:
                 list_with_data.append(0)
-    #print("\n")
-    prediction = 0
-    list_with_data.append(prediction)
     return list_with_data
 
 dict = {}
 
-def get_dict_with_data():
+def get_dict_with_data(directory: str, number_of_docs: int):
     for i in range (1, number_of_docs + 1):
 
         active_file_number = str(i)
-        list_with_data = get_data_from_file(active_file_number)
-        print("ФАЙЛ " + active_file_number + "ОБРАБОТАН")
+        list_with_data = get_data_from_file(directory, active_file_number)
+        print("ФАЙЛ " + active_file_number + " ОБРАБОТАН")
         #print(list_with_data)
         dict[active_file_number] = list_with_data
     return dict
+
+#print(get_data_from_file('10'))
