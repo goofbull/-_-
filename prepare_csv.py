@@ -1,10 +1,7 @@
-import pandas as pd
 import csv
-from nltk.tokenize import word_tokenize
 
-from nltk.corpus import stopwords
 
-stop_words_set = {"я", "ты", "он", "она", "оно", "мы", "вы", "они", "не", "нет", "того" "это", "тот", "та", "те", "который", "чей", "кто", "что", 
+stop_words_set = {"я", "ты", "он", "она", "оно", "мы", "вы", "они", "не", "нет", "того", "это", "тот", "та", "те", "который", "чей", "кто", "что", 
                       "да", "а", "но", "и", "или", "да", "также", "же", "ли", "бы", "для", "от", "из", "с", "на", 
                       "в", "по", "к", "у", "о", "об", "при", "для", "за", "перед", "после", "до", "через", "между", "над", 
                       "под", "вокруг", "из-за", "около", "через", "вон", "про", "между", "если", "когда", "пока", "хотя", 
@@ -29,16 +26,20 @@ def read_cell(x, y, filename):
 with open('./csv/prepared_data.csv', 'w', newline='', encoding='utf-8') as file:
 
     writer = csv.writer(file)
-    field = ["data", "decision"]
+    field = ["data", "decision", "judge", "region", "articles"]
 
     writer.writerow(field)
     for i in range(1, 100 + 1):
         text = read_cell(11, i, filename)
         dec = read_cell(13, i, filename)
+        judge = read_cell(4, i, filename)
+        region = read_cell(12, i, filename)
+        articles = read_cell(7, i, filename)
         if text == '' or dec == '' or text == None or dec == None:
             pass
         else:
-            writer.writerow([text, dec])
+
+            writer.writerow([text, dec, judge, region, articles])
 
     print('\ncsv Data copied to target csv files')
 
@@ -46,16 +47,20 @@ filename = './csv/arbitr_dataset_for_testing.csv'
 with open('./csv/prepared_data_for_testing.csv', 'w', newline='', encoding='utf-8') as file:
 
     writer = csv.writer(file)
-    field = ["data", "decision"]
+    field = ["data", "decision", "judge", "region", "articles"]
 
     writer.writerow(field)
     for i in range(1, 100 + 1):
         text = read_cell(11, i, filename)
         dec = read_cell(13, i, filename)
+        judge = read_cell(4, i, filename)
+        region = read_cell(12, i, filename)
+        articles = read_cell(7, i, filename)
         if text == '' or dec == '' or text == None or dec == None:
             pass
         else:
-            writer.writerow([text, dec])
+
+            writer.writerow([text, dec, judge, region, articles])
 
     print('\ncsv Data copied to target csv files')
 

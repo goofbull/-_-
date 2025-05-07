@@ -1,8 +1,7 @@
 import os
 import pandas as pd
-import xlsxwriter
-from test6 import get_dict_with_data
-
+from extract_data import get_dict_with_data
+import time
 
 def create_empty_excel(columns: list, filename: str, sheet_name: str = 'arbitr_files_dataset'):
     df = pd.DataFrame(columns=columns)
@@ -41,8 +40,8 @@ filename='data_for_training.xlsx'
 
 
 df, filepath = create_table(filename)
-
-number_of_files = 100
+start_time = time.time()
+number_of_files = 250
 
 dict = get_dict_with_data(directory, number_of_files)
 
@@ -52,22 +51,6 @@ excel_directory = 'excel_files/data_for_training.xlsx'
 
 
 make_excel_file(number_of_files, excel_directory)
-
-
-
-directory = "./pdf_cases_for_testing/"
-filename='data_for_testing.xlsx'
-
-
-df, filepath = create_table(filename)
-
-
-number_of_files = 100
-
-dict = get_dict_with_data(directory, number_of_files)
-
-
-active_file_number = ''
-excel_directory = 'excel_files/data_for_testing.xlsx'
-
-make_excel_file(number_of_files, excel_directory)
+end_time = time.time()
+execution_time = end_time - start_time
+print(f"Время выполнения операции: {execution_time:.4f} секунд")

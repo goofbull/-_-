@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from test6 import number_of_docs
+from extract_data import number_of_docs
 from collections import Counter
 import csv
 import plotly.express as px
