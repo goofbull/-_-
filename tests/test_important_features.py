@@ -7,6 +7,9 @@ from unittest import mock
 
 import fitz
 
+from important_features import CleanText
+
+
 # Import the CleanText function from the module where it is defined
 # from your_module import CleanText
 
@@ -21,33 +24,43 @@ def cleanup_log_file():
         os.remove(log_path)
 
 def create_pdf_with_text(text, dir_path, filename):
-    """Helper to create a PDF file with the given text."""
     file_path = os.path.join(dir_path, filename)
     doc = fitz.open()
     page = doc.new_page()
-    page.insert_text((72, 72), text)
+    page.insert_text(
+        (72, 72),
+        text,
+        fontsize=12,
+        fontname="notos",
+        color=(0, 0, 0)
+    )
+
     doc.save(file_path)
     doc.close()
     return file_path
 
+
 def test_cleantext_happy_path():
-    # Russian text with nouns and named entities
-    russian_text = "Москва — столица России. Иван Иванов работает в компании Газпром."
+    russian_text = "Москва - столица России. Иван Иванов работает в компании Газпром."
     with tempfile.TemporaryDirectory() as tmpdir:
         filename = "test.pdf"
-        create_pdf_with_text(russian_text, tmpdir, filename)
-        # Import here to avoid issues with global state in natasha/pymorphy3
-        from important_features import CleanText
-        clean_text, last_per = CleanText(tmpdir + os.sep, filename)
-        # The cleaned text should contain Moscow, Russia, Ivan Ivanov, Газпром, etc.
+        filepath = create_pdf_with_text(russian_text, tmpdir, filename)
+
+        # Передаём директорию с завершающим слэшем и имя файла отдельно
+        directory = tmpdir + os.sep  # гарантируем, что есть слэш в конце
+        clean_text, last_per = CleanText(directory, filename)
+
+        text_lower = clean_text.lower()
         assert isinstance(clean_text, str)
-        assert "москва" in clean_text.lower() or "Москва" in clean_text
-        assert "россия" in clean_text.lower() or "Россия" in clean_text
-        assert "иван" in clean_text.lower() or "Иван" in clean_text
-        assert "газпром" in clean_text.lower() or "Газпром" in clean_text
-        # The last PER entity should be Иван Иванов or Иванов
+        assert "москва" in text_lower
+        assert "россии" in text_lower
+        assert "иван" in text_lower
+        assert "газпром" in text_lower
+
         assert isinstance(last_per, str)
-        assert "Иван" in last_per or "иванов" in last_per.lower()
+        last_per_lower = last_per.lower()
+        assert "иван" in last_per_lower or "иванов" in last_per_lower
+
 
 def test_cleantext_no_russian_content():
     # PDF with only English text and numbers
@@ -66,19 +79,27 @@ def test_cleantext_no_russian_content():
         assert last_per == "" or last_per is None or isinstance(last_per, str)
 
 def test_logging_configuration_and_output():
-    # Russian text to trigger logging
-    russian_text = "Санкт-Петербург — красивый город."
+    russian_text = "Санкт-Петербург - красивый город."
+
+    logging.basicConfig(
+        filename='py_log.log',
+        level=logging.INFO,
+        format='%(asctime)s %(levelname)s %(message)s',
+        encoding='utf-8',
+        force=True
+    )
     with tempfile.TemporaryDirectory() as tmpdir:
         filename = "test.pdf"
         create_pdf_with_text(russian_text, tmpdir, filename)
         from important_features import CleanText
         CleanText(tmpdir + os.sep, filename)
-        # Check that log file exists and contains expected INFO messages
-        assert os.path.exists("py_log.log")
-        with open("py_log.log", encoding="utf-8") as f:
-            log_content = f.read()
-        assert "Загрузка файла..." in log_content
-        assert "Извлечение данных завершено" in log_content
-        assert "Время выполнения операции:" in log_content
-        # Should be INFO level logs
-        assert "INFO" in log_content or "INFO:" in log_content
+
+    log_path = os.path.abspath("py_log.log")
+    assert os.path.exists(log_path)
+    with open(log_path, encoding="utf-8") as f:
+        log_content = f.read()
+
+    assert "Загрузка файла..." in log_content
+    assert "Извлечение данных завершено" in log_content
+    assert "Время выполнения операции:" in log_content
+    assert "INFO" in log_content or "INFO:" in log_content

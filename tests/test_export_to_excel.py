@@ -41,7 +41,7 @@ def test_make_excel_file_populates_data_correctly(monkeypatch):
     export_to_excel.dict = test_dict
     export_to_excel.df = df
     excel_directory = filepath
-    make_excel_file(2, excel_directory)
+    make_excel_file(2, excel_directory, export_to_excel.df, export_to_excel.dict)
     result_df = pd.read_excel(filepath)
     # There should be two rows, and their values should match test_dict
     assert len(result_df) == 2
@@ -64,7 +64,7 @@ def test_make_excel_file_with_zero_files(monkeypatch):
     export_to_excel.dict = {}
     export_to_excel.df = df
     excel_directory = filepath
-    make_excel_file(0, excel_directory)
+    make_excel_file(0, excel_directory, export_to_excel.df, export_to_excel.dict)
     result_df = pd.read_excel(filepath)
     # Should only have headers, no rows
     assert result_df.empty
@@ -81,7 +81,7 @@ def test_make_excel_file_with_missing_data(monkeypatch):
     export_to_excel.dict = test_dict
     export_to_excel.df = df
     excel_directory = filepath
-    make_excel_file(1, excel_directory)
+    make_excel_file(1, excel_directory, export_to_excel.df, export_to_excel.dict)
     result_df = pd.read_excel(filepath)
     assert len(result_df) == 1
     # The first three columns should be filled, the rest should be NaN

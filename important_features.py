@@ -195,4 +195,4 @@ def CleanText(directory: str, filename: str):
     execution_time = end_time - start_time
     logging.info("Извлечение данных завершено")
     logging.info(f"Время выполнения операции: {execution_time:.4f} секунд")
-    return clean_text, per[-1]
+    return clean_text, per[-1] if bool(per) else ""
