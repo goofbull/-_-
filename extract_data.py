@@ -1,3 +1,5 @@
+from typing import Tuple, Optional
+
 import fitz
 from natasha import (
         Segmenter,
@@ -79,29 +81,30 @@ def extract_articles(text, article_pattern):
     return {key: sorted(value) for key, value in article_dict.items()}
 
 
-def ustanovil(ust: str, text: str, resh: str):
-
+def ustanovil(ust: str, text: str, resh: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    # Разделяем текст по ust
     parts = text.split(ust, 1)
     if len(parts) != 2:
-        return None, None
+        return None, None, None
 
     before_ustanovil = parts[0].strip()
+    after_ustanovil = parts[1]
 
-    parts2 = text.split(resh, 1)
+    # Далее разделяем оставшийся текст по resh
+    parts2 = after_ustanovil.split(resh, 1)
     if len(parts2) != 2:
-        return None, None
+        return None, None, None
 
     before_reshil = parts2[0].strip()
-
     reshil = before_reshil[-1000:]
 
+    # Анализируем before_ustanovil
     doc = Doc(before_ustanovil[-700:])
     doc.segment(segmenter)
     doc.tag_ner(ner_tagger)
 
     orgs = [span for span in doc.spans if span.type == "ORG"]
     orgs = [span for span in orgs if span.text not in ("Арбитражный суд", "АРБИТРАЖНЫЙ СУД")]
-
 
     persons = [span for span in doc.spans if span.type == "PER"]
 
@@ -125,7 +128,7 @@ def ustanovil(ust: str, text: str, resh: str):
         return persons[0].text, "Не найдено", reshil
     else:
         return "Не найдено", "Не найдено", reshil
-    return None, None, None
+
 
 # Лишние слова для последующего удаления
 dl = ["край", "края", "область", "области", "район", "района", "России", "РФ", "Российской Федерации"]
@@ -162,7 +165,7 @@ def get_data_from_file(directory: str, active_file_number: str):
 
     list_with_data.append(index)
 
-    filename = "case_" + active_file_number + ".pdf"
+    filename = "case_" + str(active_file_number) + ".pdf"
     doc = fitz.open(directory+filename)
     text = "\n".join([page.get_text() for page in doc])
     text = text.replace('Дело', '')
