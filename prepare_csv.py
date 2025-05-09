@@ -12,7 +12,7 @@ stop_words_set = {"я", "ты", "он", "она", "оно", "мы", "вы", "о�
                       "возможно", "следует", "конечно", "вроде", "чем", "что-то", "тот", "этот", "такой", "никакой", "другой", "так как", 
                       "а вот", "пусть", "либо", "просто", "типо", "короче", "хотя бы", "и так далее", "далее", "есть", "потому", "то", "поскольку", "б"}
 
-filename = './csv/arbitr_dataset_for_training.csv'
+#filename = './csv/arbitr_dataset_for_training.csv'
 def read_cell(x, y, filename):
     with open(filename, 'r', encoding='utf-8') as f:
         reader = csv.reader(f)
@@ -23,46 +23,68 @@ def read_cell(x, y, filename):
                 return cell
             y_count += 1
 
-with open('./csv/prepared_data.csv', 'w', newline='', encoding='utf-8') as file:
+# with open('./csv/prepared_data.csv', 'w', newline='', encoding='utf-8') as file:
 
-    writer = csv.writer(file)
-    field = ["data", "decision", "judge", "region", "articles"]
+#     writer = csv.writer(file)
+#     field = ["data", "decision", "judge", "region", "articles"]
 
-    writer.writerow(field)
-    for i in range(1, 100 + 1):
-        text = read_cell(11, i, filename)
-        dec = read_cell(13, i, filename)
-        judge = read_cell(4, i, filename)
-        region = read_cell(12, i, filename)
-        articles = read_cell(7, i, filename)
-        if text == '' or dec == '' or text == None or dec == None:
-            pass
-        else:
+#     writer.writerow(field)
+#     for i in range(1, 100 + 1):
+#         text = read_cell(11, i, filename)
+#         dec = read_cell(13, i, filename)
+#         judge = read_cell(4, i, filename)
+#         region = read_cell(12, i, filename)
+#         articles = read_cell(7, i, filename)
+#         if text == '' or dec == '' or text == None or dec == None:
+#             pass
+#         else:
 
-            writer.writerow([text, dec, judge, region, articles])
+#             writer.writerow([text, dec, judge, region, articles])
 
-    print('\ncsv Data copied to target csv files')
+#     print('\ncsv Data copied to target csv files')
 
-filename = './csv/arbitr_dataset_for_testing.csv'
-with open('./csv/prepared_data_for_testing.csv', 'w', newline='', encoding='utf-8') as file:
+# filename = './csv/arbitr_dataset_for_testing.csv'
+# with open('./csv/prepared_data_for_testing.csv', 'w', newline='', encoding='utf-8') as file:
 
-    writer = csv.writer(file)
-    field = ["data", "decision", "judge", "region", "articles"]
+#     writer = csv.writer(file)
+#     field = ["data", "decision", "judge", "region", "articles"]
 
-    writer.writerow(field)
-    for i in range(1, 100 + 1):
-        text = read_cell(11, i, filename)
-        dec = read_cell(13, i, filename)
-        judge = read_cell(4, i, filename)
-        region = read_cell(12, i, filename)
-        articles = read_cell(7, i, filename)
-        if text == '' or dec == '' or text == None or dec == None:
-            pass
-        else:
+#     writer.writerow(field)
+#     for i in range(1, 100 + 1):
+#         text = read_cell(11, i, filename)
+#         dec = read_cell(13, i, filename)
+#         judge = read_cell(4, i, filename)
+#         region = read_cell(12, i, filename)
+#         articles = read_cell(7, i, filename)
+#         if text == '' or dec == '' or text == None or dec == None:
+#             pass
+#         else:
 
-            writer.writerow([text, dec, judge, region, articles])
+#             writer.writerow([text, dec, judge, region, articles])
 
-    print('\ncsv Data copied to target csv files')
+#     print('\ncsv Data copied to target csv files')
 
 
 
+def prepare_csv(filename: str):
+    full_filename = './csv/' + filename + '.csv'
+    filename_new = './csv/prepared_' + filename + '.csv'
+    with open(filename_new, 'w', newline='', encoding='utf-8') as file:
+
+        writer = csv.writer(file)
+        field = ["data", "decision", "judge", "region", "articles"]
+
+        writer.writerow(field)
+        for i in range(1, 100 + 1):
+            text = read_cell(11, i, full_filename)
+            dec = read_cell(13, i, full_filename)
+            judge = read_cell(4, i, full_filename)
+            region = read_cell(12, i, full_filename)
+            articles = read_cell(7, i, full_filename)
+            if text == '' or dec == '' or text == None or dec == None:
+                pass
+            else:
+
+                writer.writerow([text, dec, judge, region, articles])
+
+        #print('\ncsv Data copied to target csv files')

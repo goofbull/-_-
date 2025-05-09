@@ -64,5 +64,15 @@ print("Recall Score: ", recall)
 print("F1 Score: ", f1)
 
 
-cm = confusion_matrix(df2['decision'], predictions)
-print("Confusion Matrix:\n", cm)
+# cm = confusion_matrix(df2['decision'], predictions)
+# print("Confusion Matrix:\n", cm)
+def show_new_prediction(filename: str):
+    new_filename = './csv/prepared_' + filename + '.csv'
+    df3 = pd.read_csv(new_filename)
+    new_texts = df3['data']
+    new_labels = df3['decision']
+
+    predictions = pipeline_with_random_oversampler.predict(new_texts)
+    #print(predictions[0])
+    
+    return predictions[0]

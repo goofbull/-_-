@@ -23,7 +23,7 @@ def create_table(filename: str):
                                   filename=filename)
     return df, filepath
 
-def make_excel_file(number_of_files: int, excel_directory: str):
+def make_excel_file(number_of_files: int, excel_directory: str, df, dict):
     for i in range(1, number_of_files + 1):
         current_row = i
         df.loc[current_row] = [None] * len(columns)
@@ -35,22 +35,36 @@ def make_excel_file(number_of_files: int, excel_directory: str):
                 df.at[current_row, columns[u]] = y
     df.to_excel(excel_directory, index=False)
 
-directory = "./pdf_cases/"
-filename='data_for_training.xlsx'
+# directory = "./pdf_cases/"
+# filename='data_for_training.xlsx'
 
 
-df, filepath = create_table(filename)
-start_time = time.time()
-number_of_files = 250
+# df, filepath = create_table(filename)
+# start_time = time.time()
+# number_of_files = 250
 
-dict = get_dict_with_data(directory, number_of_files)
-
-
-active_file_number = ''
-excel_directory = 'excel_files/data_for_training.xlsx'
+# dict = get_dict_with_data(directory, number_of_files)
 
 
-make_excel_file(number_of_files, excel_directory)
-end_time = time.time()
-execution_time = end_time - start_time
-print(f"Время выполнения операции: {execution_time:.4f} секунд")
+# active_file_number = ''
+# excel_directory = 'excel_files/data_for_training.xlsx'
+
+
+# make_excel_file(number_of_files, excel_directory)
+# end_time = time.time()
+# execution_time = end_time - start_time
+# print(f"Время выполнения операции: {execution_time:.4f} секунд")
+
+directory = "./pdf_cases_for_program/"
+
+number_of_files = 1
+
+
+
+
+def create_single_excel(filename: str):
+    new_filename = filename + '.xlsx'
+    df, filepath = create_table(filename)
+    dict = get_dict_with_data(directory, number_of_files)
+    excel_directory = 'excel_files/' + new_filename
+    make_excel_file(number_of_files, excel_directory, df, dict)
