@@ -31,13 +31,24 @@ class MyApp(QMainWindow):
     def get_filename(self):
         filename = self.ui.filename.text()
         print("Введённый файл:", filename)
+        if not filename:
+            QMessageBox.warning(self, "Предупреждение", "Введите название файла.")
+            return
 
+        base_dir = "pdf_cases_for_program"
+        full_path = os.path.join(base_dir, filename + '.pdf')
+
+        if os.path.exists(full_path):
+            self.success_upload_alert()
+        else:
+            self.failed_upload_alert()
 
     def load_data(self):
         with open('output.txt', 'w', encoding='utf-8') as f:
             with redirect_stdout(f):
                 start_time = time.time()
-                create_single_excel(self.ui.filename.text())
+                directory = "./pdf_cases_for_program/"
+                create_single_excel(directory, self.ui.filename.text())
 
                 path = "excel_files/" + self.ui.filename.text() + ".xlsx"
                 workbook = openpyxl.load_workbook(path)
@@ -61,6 +72,8 @@ class MyApp(QMainWindow):
                 print("Загрузка данных...")
                 print(f"Время выполнения операции: {execution_time:.4f} секунд")
                 print("Excel файл готов")
+
+        self.success_load_data_alert()
 
     def show_result(self):
         with open('output.txt', 'a', encoding='utf-8') as f:
@@ -112,6 +125,8 @@ class MyApp(QMainWindow):
                 print("Загрузка графика...")
                 print(f"Время выполнения операции: {execution_time:.4f} секунд")
 
+                self.success_show_diagram_alert()
+
     def show_report(self):
         txt_to_pdf.txt_to_pdf_fpdf("output.txt", "output.pdf")
         self.open_pdf()
@@ -124,6 +139,18 @@ class MyApp(QMainWindow):
             subprocess.run(["open", pdf_path])
         else:  # Linux
             subprocess.run(["xdg-open", pdf_path])
+
+    def success_upload_alert(self):
+        QMessageBox.information(self, "Уведомление", "Файл успешно загружен.")
+
+    def failed_upload_alert(self):
+        QMessageBox.critical(self, "Ошибка", "Файл не найден. Убедитесь, что файл находится в правильной директории, или измените название файла.")
+
+    def success_show_diagram_alert(self):
+        QMessageBox.information(self, "Уведомление", "График построен.")
+
+    def success_load_data_alert(self):
+        QMessageBox.information(self, "Уведомление", "Извлеченные данные отображены в таблице.")
 
 
 if __name__ == "__main__":

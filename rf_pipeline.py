@@ -6,7 +6,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from imblearn.over_sampling import RandomOverSampler
 
 # Загрузка обучающих данных
-df = pd.read_csv('./csv/prepared_data.csv')
+df = pd.read_csv('./csv/prepared_arbitr_dataset_for_training.csv')
 texts = df['data']
 labels = df['decision'].tolist()
 
@@ -28,7 +28,7 @@ pipeline = ImbPipeline([
 pipeline.fit(texts, labels)
 
 # Загрузка тестовых данных
-df2 = pd.read_csv('./csv/prepared_data_for_testing.csv')
+df2 = pd.read_csv('./csv/prepared_arbitr_dataset_for_testing.csv')
 new_texts = df2['data']
 new_labels = df2['decision']
 

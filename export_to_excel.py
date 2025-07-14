@@ -35,22 +35,22 @@ def make_excel_file(number_of_files: int, excel_directory: str, df, dict):
                 df.at[current_row, columns[u]] = y
     df.to_excel(excel_directory, index=False)
 
-# directory = "./pdf_cases/"
-# filename='data_for_training.xlsx'
+directory = "./pdf_cases/"
+filename='data_for_training.xlsx'
 
 
-# df, filepath = create_table(filename)
+df, filepath = create_table(filename)
 # start_time = time.time()
-# number_of_files = 250
+number_of_files = 250
 
-# dict = get_dict_with_data(directory, number_of_files)
-
-
-# active_file_number = ''
-# excel_directory = 'excel_files/data_for_training.xlsx'
+dict = get_dict_with_data(directory, number_of_files)
 
 
-# make_excel_file(number_of_files, excel_directory)
+active_file_number = ''
+excel_directory = 'excel_files/data_for_training.xlsx'
+
+
+make_excel_file(number_of_files, excel_directory)
 # end_time = time.time()
 # execution_time = end_time - start_time
 # print(f"Время выполнения операции: {execution_time:.4f} секунд")
@@ -62,7 +62,7 @@ number_of_files = 1
 
 
 
-def create_single_excel(filename: str):
+def create_single_excel(directory: str, filename: str):
     new_filename = filename + '.xlsx'
     df, filepath = create_table(filename)
     dict = get_dict_with_data(directory, number_of_files)
